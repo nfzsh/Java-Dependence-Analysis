@@ -4,6 +4,7 @@ import javassist.*;
 import javassist.bytecode.MethodInfo;
 import javassist.expr.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +21,9 @@ import java.util.stream.Collectors;
  */
 public class InstrumentChecker extends ExprEditor {
     private String file;
+    @Getter
+    @Setter
+    private Boolean debug = Boolean.FALSE;
     @Getter
     private final List<NotFountRecord> nfr = new LinkedList<>();
 
@@ -40,9 +44,10 @@ public class InstrumentChecker extends ExprEditor {
                     .originFileName(e.getEnclosingClass().getClassFile().getSourceFile())
                     .originLineNumber(e.getLineNumber())
                     .build());
-            NotFountRecord.builder().expr(e).build();
-            System.err.println("NewExpr Not Found" + ex.getMessage());
-            ex.printStackTrace();
+            if (debug) {
+                System.err.println("NewExpr Not Found" + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -58,8 +63,10 @@ public class InstrumentChecker extends ExprEditor {
                     .originFileName(f.getEnclosingClass().getClassFile().getSourceFile())
                     .originLineNumber(f.getLineNumber())
                     .build());
-            System.err.println("Field Not Found" + ex.getMessage());
-            ex.printStackTrace();
+            if (debug) {
+                System.err.println("Field Not Found" + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -75,8 +82,10 @@ public class InstrumentChecker extends ExprEditor {
                     .originFileName(a.getEnclosingClass().getClassFile().getSourceFile())
                     .originLineNumber(a.getLineNumber())
                     .build());
-            System.err.println("NewArray not found" + ex.getMessage());
-            ex.printStackTrace();
+            if (debug) {
+                System.err.println("NewArray not found" + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -95,8 +104,10 @@ public class InstrumentChecker extends ExprEditor {
                     .originFileName(m.getEnclosingClass().getClassFile().getSourceFile())
                     .originLineNumber(m.getLineNumber())
                     .build());
-            System.err.println("MethodCall not found" + ex.getMessage());
-            ex.printStackTrace();
+            if (debug) {
+                System.err.println("MethodCall not found" + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -114,8 +125,10 @@ public class InstrumentChecker extends ExprEditor {
                     .originFileName(c.getEnclosingClass().getClassFile().getSourceFile())
                     .originLineNumber(c.getLineNumber())
                     .build());
-            System.err.println("ConstructorCall not found" + ex.getMessage());
-            ex.printStackTrace();
+            if (debug) {
+                System.err.println("ConstructorCall not found" + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -131,8 +144,10 @@ public class InstrumentChecker extends ExprEditor {
                     .originFileName(i.getEnclosingClass().getClassFile().getSourceFile())
                     .originLineNumber(i.getLineNumber())
                     .build());
-            System.err.println("Instanceof not found" + ex.getMessage());
-            ex.printStackTrace();
+            if (debug) {
+                System.err.println("Instanceof not found" + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -148,8 +163,10 @@ public class InstrumentChecker extends ExprEditor {
                     .originFileName(c.getEnclosingClass().getClassFile().getSourceFile())
                     .originLineNumber(c.getLineNumber())
                     .build());
-            System.err.println("Instanceof not found" + ex.getMessage());
-            ex.printStackTrace();
+            if (debug) {
+                System.err.println("Instanceof not found" + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
     }
 
@@ -166,6 +183,10 @@ public class InstrumentChecker extends ExprEditor {
                     .originFileName(clazz.getPackageName() + clazz.getName())
                     .originLineNumber(-1)
                     .build());
+            if (debug) {
+                System.err.println("Class has not found" + ex.getMessage());
+                ex.printStackTrace();
+            }
         }
         clazz.instrument(this);
     }

@@ -20,13 +20,15 @@ public class JdaApplication {
 
     public static void main(String[] args) throws NotFoundException, IOException, CannotCompileException {
         Pattern pattern = null;
+        String jdaFilter = System.getenv("JDA_FILTER");
+        if (jdaFilter != null && jdaFilter.length() > 0) {
+            pattern = Pattern.compile(jdaFilter);
+        }
+        boolean jdaDebug = Boolean.parseBoolean(System.getenv("JDA_DEBUG"));
+
         ClassPool classPool = new ClassPool();
         classPool.appendSystemPath();
         for (int i = 0; i < args.length; i++) {
-            if (i == 0 && args[0].startsWith("regex:")) {
-                pattern = Pattern.compile(args[i].substring("regex:".length()));
-                continue;
-            }
             System.out.printf("found path %s %n", args[i]);
             addClassPath(classPool, args[i]);
         }
@@ -34,6 +36,7 @@ public class JdaApplication {
         List<InstrumentChecker> checkers = new LinkedList<>();
         for (String clazz : classes) {
             InstrumentChecker instrumentChecker = new InstrumentChecker();
+            instrumentChecker.setDebug(jdaDebug);
             checkers.add(instrumentChecker);
             instrumentChecker.clazz(classPool.get(clazz));
         }
