@@ -4,9 +4,14 @@ import javassist.CannotCompileException;
 import javassist.ClassPath;
 import javassist.ClassPool;
 import javassist.NotFoundException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,6 +30,10 @@ public class JdaApplication {
             pattern = Pattern.compile(jdaFilter);
         }
         boolean jdaDebug = Boolean.parseBoolean(System.getenv("JDA_DEBUG"));
+        String outFile = Optional.ofNullable(System.getenv("JDA_OUT")).orElse("results.json");
+        if (!outFile.endsWith(".json")) {
+            outFile += ".json";
+        }
 
         ClassPool classPool = new ClassPool();
         classPool.appendSystemPath();
@@ -44,7 +53,28 @@ public class JdaApplication {
         for (InstrumentChecker checker : checkers) {
             checker.print(pattern);
         }
-        System.out.println("Print Complete");
+        System.out.println("Print complete");
+
+        System.out.println("Start export");
+        JSONArray export = new JSONArray();
+        for (InstrumentChecker checker : checkers) {
+            List<NotFountRecord> nfr = checker.getNfr(pattern);
+            if (nfr.size() > 0) {
+                JSONObject clazz = new JSONObject();
+                clazz.put("fileName", checker.getFile());
+                JSONArray data = new JSONArray();
+                for (NotFountRecord notFountRecord : nfr) {
+                    JSONObject record = new JSONObject();
+                    record.put("lineNumber", notFountRecord.getOriginLineNumber());
+                    record.put("targetClass", notFountRecord.getException().getMessage());
+                    data.put(record);
+                }
+                clazz.put("data", data);
+                export.put(clazz);
+            }
+        }
+        Files.write(Paths.get(outFile), export.toString().getBytes(StandardCharsets.UTF_8));
+        System.out.println("Export complete");
     }
 
     public static void addClassPath(ClassPool classPool, String path) throws NotFoundException, IOException {

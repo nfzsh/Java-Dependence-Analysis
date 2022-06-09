@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Java Dependence Analysis</title>
+    <link rel="stylesheet" href="static/element-plus/index.css">
+    <script src="static/vue/vue.prod.js"></script>
+    <script src="static/element-plus/index.full.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <el-container>
+        <el-header>
+            <div style="text-align: center">
+                <el-upload ref="upload"
+                           :limit="1"
+                           :auto-upload="false"
+                           :show-file-list="false"
+                           :on-change="fileChange"
+                           accept="application/json">
+                    <template #trigger>
+                        <el-button type="primary">{{origin.message}}</el-button>
+                    </template>
+                </el-upload>
+            </div>
+            <el-divider />
+        </el-header>
+        <el-main>
+            <div v-if="data.depend.length===0 || data.call.length===0">
+                <el-empty description="空" />
+            </div>
+            <div v-else>
+                <el-row>
+                    <el-col :span="12">
+                        <div style="border-radius: 4px;min-height: 36px;">
+                            <div style="text-align: center; width: 100%">依赖分析</div>
+                            <el-descriptions v-for="(item,i) in data.depend" :title="item.name"
+                                             style="border-style: groove; padding: 5px;margin: 5px" column="2">
+                                <div v-for="(d,i) in item.data">
+                                    <el-descriptions-item label="调用类">{{d.targetClass}}</el-descriptions-item>
+                                    <el-descriptions-item label="行数">{{d.lineNumber}}</el-descriptions-item>
+                                </div>
+                            </el-descriptions>
+                        </div>
+                    </el-col>
+                    <el-col :span="12">
+                        <div style="border-radius: 4px;min-height: 36px;">
+                            <div style="text-align: center; width: 100%">调用分析</div>
+                            <el-descriptions v-for="(item,i) in data.call" :title="item.fileName"
+                                             style="border-style: groove; padding: 5px;margin: 5px" column="2">
+                                <div v-for="(d,i) in item.data">
+                                    <el-descriptions-item label="行数">{{d.lineNumber}}</el-descriptions-item>
+                                    <el-descriptions-item label="信息">{{d.targetClass}}</el-descriptions-item>
+                                </div>
+                            </el-descriptions>
+                        </div>
+                    </el-col>
+                </el-row>
+            </div>
+        </el-main>
+    </el-container>
+</div>
+<script>
+    const App = {
+        data() {
+            return {
+                origin: {
+                    message: '选择结果文件解析'
+                },
+                data: {
+                    depend: [
+                        // {
+                        //     fileName: 'Sting',
+                        //     data: [
+                        //         {
+                        //             lineNumber: 1,
+                        //             originClass: 'String'
+                        //         }
+                        //     ]
+                        // }
+                    ],
+                    call: [
+                        //     {
+                        //     name: 'String',
+                        //     data: [{
+                        //         lineNumber: 1,
+                        //         targetClass: 'target'
+                        //     }]
+                        // }
+                    ]
+                }
+            };
+        },
+        methods: {
+            fileChange: function(uploadFile, uploadFiles) {
+                let _this = this;
+                let fileReader = new FileReader();
+                fileReader.readAsText(uploadFile.raw);
+                fileReader.onload = function() {
+                    let result = JSON.parse(fileReader.result);
+                    // call
+                    _this.data.call.length = 0;
+                    for (let element of result) {
+                        let clazz = {};
+                        clazz.fileName = element.fileName;
+                        clazz.data = [];
+                        for (let dl of element.data) {
+                            clazz.data.push({
+                                lineNumber: dl.lineNumber,
+                                targetClass: dl.targetClass
+                            })
+                        }
+                        _this.data.call.push(clazz);
+                    }
+                    // depend
+                    _this.data.depend.length = 0;
+                    let dependTemp = {};
+                    for (let element of result) {
+                        for (let dl of element.data) {
+                            let call = dependTemp[dl.targetClass];
+                            if (call === null || call === undefined) {
+                                call = { name: dl.targetClass, data: [] };
+                            }
+                            call.data.push({
+                                lineNumber: dl.lineNumber,
+                                targetClass: element.fileName
+                            })
+                            dependTemp[dl.targetClass] = call;
+                        }
+                    }
+                    for (let dep in dependTemp) {
+                        _this.data.depend.push(dependTemp[dep]);
+                    }
+                }
+            }
+        }
+    };
+    const app = Vue.createApp(App);
+    app.use(ElementPlus);
+    app.mount("#app");
+</script>
+</body>
+</html>

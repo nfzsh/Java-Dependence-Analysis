@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
  * @since v1.0.0
  */
 public class InstrumentChecker extends ExprEditor {
+    @Getter
     private String file;
     @Getter
     @Setter
@@ -207,5 +208,15 @@ public class InstrumentChecker extends ExprEditor {
                     notFountRecord.getOriginLineNumber(), notFountRecord.getException().getMessage());
         }
         System.out.println("###############" + "\n\n");
+    }
+
+    public List<NotFountRecord> getNfr(Pattern pattern) {
+        List<NotFountRecord> nfr = this.nfr;
+        if (pattern != null) {
+            nfr = this.nfr.stream()
+                    .filter(notFountRecord -> pattern.matcher(notFountRecord.getException().getMessage()).matches())
+                    .collect(Collectors.toList());
+        }
+        return nfr;
     }
 }
