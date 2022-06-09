@@ -44,6 +44,10 @@ public class JdaApplication {
         System.out.printf("found classes %s%n", classes.size());
         List<InstrumentChecker> checkers = new LinkedList<>();
         for (String clazz : classes) {
+            // 跳过META_INF/versions文件夹下class文件导致的错误
+            if (clazz.contains("META-INF.versions")) {
+                continue;
+            }
             InstrumentChecker instrumentChecker = new InstrumentChecker();
             instrumentChecker.setDebug(jdaDebug);
             checkers.add(instrumentChecker);
