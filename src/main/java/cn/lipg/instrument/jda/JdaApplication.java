@@ -47,7 +47,14 @@ public class JdaApplication {
             InstrumentChecker instrumentChecker = new InstrumentChecker();
             instrumentChecker.setDebug(jdaDebug);
             checkers.add(instrumentChecker);
-            instrumentChecker.clazz(classPool.get(clazz));
+            try {
+                instrumentChecker.clazz(classPool.get(clazz));
+            } catch (NotFoundException ex) {
+                System.err.println("Class " + clazz + " NotFound");
+                if (jdaDebug) {
+                    ex.printStackTrace();
+                }
+            }
         }
         System.out.println("Start Print");
         for (InstrumentChecker checker : checkers) {
